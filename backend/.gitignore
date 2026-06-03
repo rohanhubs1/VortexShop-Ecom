@@ -1,0 +1,8 @@
+target/
+.idea/
+uploads/
+
+# Environment Variables
+.env
+.env.local
+.env.*
