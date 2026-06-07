@@ -5,6 +5,7 @@ import API from '../api/axios'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { Plus, Check, MapPin, ChevronLeft, ShieldCheck, CreditCard } from 'lucide-react'
+import vortexQr from '../assets/vortex-qr.png';
 
 const CheckoutPage = () => {
   const { cart, fetchCart } = useCart()
@@ -366,7 +367,7 @@ const CheckoutPage = () => {
             {paymentMethod === 'upi' && (
               <div className="bg-surface-50 border border-surface-200 rounded-xl p-5 text-center space-y-3">
                 <div className="mx-auto w-32 h-32 bg-white rounded-xl p-2 border border-surface-200 flex items-center justify-center">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="UPI QR" className="w-full h-full opacity-80" />
+                  <img src={vortexQr} alt="UPI QR" className="w-full h-full opacity-80" />
                 </div>
                 <p className="text-sm text-surface-600 font-medium">Scan QR Code using any UPI App</p>
                 <div className="flex items-center space-x-2 text-[11px] font-medium text-brand-700 bg-brand-50 p-3 rounded-lg border border-brand-100 justify-center">
