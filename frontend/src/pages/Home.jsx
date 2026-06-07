@@ -182,7 +182,7 @@ const Home = () => {
       <section className="space-y-6">
         <div className="flex justify-between items-end border-b border-surface-200 pb-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-surface-900">Top Deals Today</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Top Deals Today</h2>
           </div>
           <Link to="/catalog" className="text-brand-600 hover:text-brand-700 text-sm font-semibold flex items-center space-x-1.5 transition-colors">
             <span>View All</span>
@@ -209,7 +209,7 @@ const Home = () => {
       <section className="space-y-6">
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-surface-900">Shop by Category</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Shop by Category</h2>
           </div>
         </div>
 
@@ -239,7 +239,7 @@ const Home = () => {
       <section className="space-y-6">
         <div className="flex justify-between items-end border-b border-surface-200 pb-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-surface-900">New Arrivals</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">New Arrivals</h2>
           </div>
         </div>
 
