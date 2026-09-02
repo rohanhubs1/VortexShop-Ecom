@@ -20,6 +20,8 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     
     Page<Product> findByDeletedFalse(Pageable pageable);
     
+    Page<Product> findByIsTopDealTrueAndDeletedFalse(Pageable pageable);
+    
     boolean existsBySlug(String slug);
 
     @Query("SELECT p FROM Product p WHERE p.deleted = false AND " +
@@ -27,13 +29,15 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
            "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
            "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-           "(:minRating IS NULL OR p.averageRating >= :minRating)")
+           "(:minRating IS NULL OR p.averageRating >= :minRating) AND " +
+           "(:isTopDeal IS NULL OR p.isTopDeal = :isTopDeal)")
     Page<Product> searchProducts(
             @Param("keyword") String keyword,
             @Param("categoryId") Long categoryId,
             @Param("minPrice") java.math.BigDecimal minPrice,
             @Param("maxPrice") java.math.BigDecimal maxPrice,
             @Param("minRating") Double minRating,
+            @Param("isTopDeal") Boolean isTopDeal,
             Pageable pageable
     );
 }

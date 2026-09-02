@@ -17,18 +17,17 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, topDealsRes] = await Promise.all([
           API.get('/products?size=8&sort=createdAt,desc'),
-          API.get('/categories')
+          API.get('/categories'),
+          API.get('/products/top-deals?size=8')
         ])
         
         const allProducts = prodRes.data.content || []
+        const topDealsProducts = topDealsRes.data.content || []
         
-        // Split into sections (repeat data if not enough to show infinite loop scrolling effect)
-        const extendItems = (items, min) => items.length < min ? [...items, ...items, ...items].slice(0, min) : items;
-        
-        setTopDeals(extendItems(allProducts.slice(0, 4), 6))
-        setProducts(extendItems(allProducts.slice(4, 8), 6))
+        setTopDeals(topDealsProducts)
+        setProducts(allProducts)
         // We'll just reuse some products for best sellers for demo purposes
         setCategories(catRes.data)
       } catch (err) {
@@ -118,12 +117,18 @@ const Home = () => {
           </div>
         </div>
 
-        <div className="flex items-end justify-between mt-4 pt-4 border-t border-surface-100">
-          <div className="flex flex-col">
-            {badge === 'HOT' && <span className="text-xs text-surface-400 line-through">${(prod.price * 1.2).toFixed(2)}</span>}
-            <span className="text-lg font-extrabold text-surface-900">${prod.price}</span>
-          </div>
-          <button
+          <div className="flex items-end justify-between mt-4 pt-4 border-t border-surface-100">
+            <div className="flex flex-col">
+              {prod.isTopDeal && prod.discountPercentage > 0 && (
+                <span className="text-xs text-surface-400 line-through">${prod.price.toFixed(2)}</span>
+              )}
+              <span className="text-lg font-extrabold text-surface-900">
+                ${prod.isTopDeal && prod.discountPercentage > 0 
+                  ? (prod.price * (1 - prod.discountPercentage / 100)).toFixed(2) 
+                  : prod.price}
+              </span>
+            </div>
+            <button
             onClick={() => handleAddToCart(prod.id)}
             disabled={prod.stockQuantity < 1}
             className="btn-primary py-1.5 px-4 text-xs shadow-sm hover:shadow-md"
@@ -165,17 +170,49 @@ const Home = () => {
           </div>
         </div>
 
-        <div className="hidden lg:block relative z-10 w-80">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300 border border-surface-100">
-            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" alt="Featured Product" className="w-full h-48 object-cover rounded-xl mb-4" />
-            <h3 className="font-bold text-surface-900 text-lg">Sony WH-1000XM5</h3>
-            <p className="text-sm text-surface-500 mb-3">Industry leading noise cancellation</p>
-            <div className="flex justify-between items-center">
-              <span className="font-extrabold text-brand-600 text-xl">$348.00</span>
-              <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded font-medium">FEATURED</span>
+        {topDeals.length > 0 ? (
+          <div className="hidden lg:block relative z-10 w-80">
+            <Link 
+              to={`/products/${topDeals[0].id}`}
+              className="block bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 border border-surface-100 cursor-pointer text-left"
+            >
+              <img 
+                src={getImageUrl(topDeals[0].imageUrl)} 
+                alt={topDeals[0].name} 
+                className="w-full h-48 object-contain rounded-xl mb-4 bg-surface-50 p-2" 
+              />
+              <h3 className="font-bold text-surface-900 text-lg line-clamp-1">{topDeals[0].name}</h3>
+              <p className="text-sm text-surface-500 mb-3 line-clamp-2 min-h-[40px]">{topDeals[0].description}</p>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  {topDeals[0].discountPercentage > 0 && (
+                    <span className="text-xs text-surface-400 line-through">${topDeals[0].price.toFixed(2)}</span>
+                  )}
+                  <span className="font-extrabold text-brand-600 text-xl">
+                    ${topDeals[0].discountPercentage > 0 
+                      ? (topDeals[0].price * (1 - topDeals[0].discountPercentage / 100)).toFixed(2) 
+                      : topDeals[0].price.toFixed(2)}
+                  </span>
+                </div>
+                <span className="bg-brand-50 text-brand-600 text-xs px-2.5 py-1 rounded-lg font-bold tracking-wider uppercase">
+                  {topDeals[0].discountPercentage > 0 ? `${topDeals[0].discountPercentage}% OFF` : 'DEAL'}
+                </span>
+              </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="hidden lg:block relative z-10 w-80">
+            <div className="bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300 border border-surface-100">
+              <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" alt="Featured Product" className="w-full h-48 object-cover rounded-xl mb-4" />
+              <h3 className="font-bold text-surface-900 text-lg">Sony WH-1000XM5</h3>
+              <p className="text-sm text-surface-500 mb-3">Industry leading noise cancellation</p>
+              <div className="flex justify-between items-center">
+                <span className="font-extrabold text-brand-600 text-xl">$348.00</span>
+                <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded font-medium">FEATURED</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* Top Deals Carousel */}

@@ -4,7 +4,7 @@ import API from '../api/axios'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { getImageUrl } from '../utils/imageHelper'
-import { Star, Heart, MessageSquare, ShieldCheck, ArrowLeft, Plus, Minus } from 'lucide-react'
+import { Star, Heart, MessageSquare, ShieldCheck, ArrowLeft, Plus, Minus, Flame, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const ProductDetail = () => {
@@ -23,6 +23,8 @@ const ProductDetail = () => {
   const [comment, setComment] = useState('')
   const [reviewError, setReviewError] = useState('')
   const [reviewSuccess, setReviewSuccess] = useState(false)
+  const [reviewImage, setReviewImage] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Recently Viewed State
   const [recentlyViewed, setRecentlyViewed] = useState([])
@@ -67,10 +69,22 @@ const ProductDetail = () => {
     e.preventDefault()
     setReviewError('')
     setReviewSuccess(false)
+    setUploadingImage(true)
     try {
-      await API.post('/products/reviews', { productId: id, rating, comment })
+      let imageUrl = null
+      if (reviewImage) {
+        const formData = new FormData()
+        formData.append('file', reviewImage)
+        const uploadRes = await API.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        imageUrl = uploadRes.data.url
+      }
+      
+      await API.post('/products/reviews', { productId: id, rating, comment, imageUrl })
       setReviewSuccess(true)
       setComment('')
+      setReviewImage(null)
       // Re-fetch data
       const [prodRes, revRes] = await Promise.all([
         API.get(`/products/${id}`),
@@ -80,6 +94,8 @@ const ProductDetail = () => {
       setReviews(revRes.data)
     } catch (err) {
       setReviewError(err.response?.data?.message || 'Failed to submit review')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -146,26 +162,52 @@ const ProductDetail = () => {
 
         {/* Right Column: Actions */}
         <div className="space-y-6">
-          <span className="text-xs text-brand-600 uppercase tracking-widest font-extrabold bg-brand-50 px-3 py-1 rounded-full">{product.categoryName}</span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-surface-900 tracking-tight leading-tight">{product.name}</h1>
-          
-          <div className="flex items-center space-x-4 border-y border-surface-200 py-3">
-            <div className="flex items-center space-x-1">
-              <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-              <span className="text-sm font-semibold text-surface-900">{product.averageRating || '5.0'}</span>
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-black px-3 py-1 bg-brand-100 text-brand-700 rounded-full uppercase tracking-widest">
+                {product.categoryName}
+              </span>
+              {product.isTopDeal && (
+                <span className="text-xs font-black px-3 py-1 bg-brand-500 text-white rounded-full uppercase tracking-widest flex items-center gap-1">
+                  <Flame className="h-3 w-3" /> TOP DEAL
+                </span>
+              )}
+              {product.averageRating > 4.7 && (
+                <span className="text-xs font-black px-3 py-1 bg-emerald-500 text-white rounded-full uppercase tracking-widest flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" /> TOP RATED
+                </span>
+              )}
             </div>
-            <span className="text-surface-300">|</span>
-            <div className="flex items-center space-x-1.5 text-sm text-surface-600">
-              <MessageSquare className="h-4.5 w-4.5" />
-              <span>{reviews.length} Customer Reviews</span>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-surface-300 tracking-tight">{product.name}</h1>
+          </div>
+
+          <div className="flex items-center space-x-4 border-b border-surface-200 pb-6">
+            <div className="flex text-amber-400">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.averageRating || 0) ? 'fill-current' : 'text-surface-600'}`} />
+              ))}
             </div>
+            <span className="font-bold text-surface-300 text-sm">{product.averageRating || 'No ratings'}</span>
+            <span className="text-surface-500">|</span>
+            <span className="text-sm text-surface-500 flex items-center gap-2"><MessageSquare className="h-4 w-4" /> {reviews.length} Customer Reviews</span>
           </div>
 
           <p className="text-surface-600 text-base leading-relaxed">{product.description}</p>
 
           <div className="space-y-2">
             <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider block">Pricing</span>
-            <span className="text-4xl font-black text-surface-900">${product.price}</span>
+            <div className="flex items-end gap-3">
+              <span className="text-4xl font-black text-surface-300">
+                ${product.isTopDeal && product.discountPercentage > 0 
+                  ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2) 
+                  : product.price}
+              </span>
+              {product.isTopDeal && product.discountPercentage > 0 && (
+                <span className="text-lg font-bold text-surface-500 line-through mb-1">
+                  ${product.price.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Stock & Cart actions */}
@@ -242,7 +284,7 @@ const ProductDetail = () => {
         {/* Left Column: Create Review Form */}
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-surface-900">Ratings & Reviews</h2>
+            <h2 className="text-2xl font-bold text-surface-300">Ratings & Reviews</h2>
             <p className="text-sm text-surface-500 mt-1">Share your experience with this product</p>
           </div>
 
@@ -289,11 +331,26 @@ const ProductDetail = () => {
                 ></textarea>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-surface-600 uppercase tracking-wider mb-1.5">Add Photo (Optional)</label>
+                <div className="flex items-center gap-4">
+                  <label className="cursor-pointer bg-surface-100 hover:bg-surface-200 text-surface-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center transition-colors">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {reviewImage ? reviewImage.name : 'Choose Image'}
+                    <input type="file" className="hidden" accept="image/*" onChange={e => setReviewImage(e.target.files[0])} />
+                  </label>
+                  {reviewImage && (
+                    <button type="button" onClick={() => setReviewImage(null)} className="text-xs text-red-600 font-bold hover:underline">Remove</button>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
+                disabled={uploadingImage}
                 className="w-full btn-primary py-2.5 rounded-xl text-sm"
               >
-                Submit Review
+                {uploadingImage ? 'Submitting...' : 'Submit Review'}
               </button>
             </form>
           ) : isAdmin ? (
@@ -312,7 +369,7 @@ const ProductDetail = () => {
 
         {/* Right Column: Reviews List */}
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="font-bold text-xl text-surface-900">Recent Customer Critiques ({reviews.length})</h3>
+          <h3 className="font-bold text-xl text-surface-300">Recent Customer Critiques ({reviews.length})</h3>
           
           {reviews.length === 0 ? (
             <p className="text-surface-500 text-sm italic bg-surface-50 p-6 rounded-xl border border-surface-200">There are no reviews for this product yet. Be the first to review!</p>
@@ -322,7 +379,7 @@ const ProductDetail = () => {
                 <div key={rev.id} className="bg-white border border-surface-200 rounded-xl p-6 space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-sm text-surface-900 block">{rev.reviewerName}</span>
+                      <span className="font-bold text-sm text-surface-300 block">{rev.reviewerName}</span>
                       <span className="text-xs text-surface-500">
                         {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                       </span>
@@ -337,8 +394,13 @@ const ProductDetail = () => {
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm text-surface-700 leading-relaxed font-medium">"{rev.comment}"</p>
-                </div>
+                    <p className="text-sm text-surface-600 leading-relaxed">{rev.comment}</p>
+                    {rev.imageUrl && (
+                      <div className="mt-3">
+                        <img src={getImageUrl(rev.imageUrl)} alt="Review attachment" className="h-24 w-24 object-cover rounded-lg border border-surface-200 shadow-sm hover:scale-105 transition-transform cursor-pointer" onClick={() => window.open(getImageUrl(rev.imageUrl), '_blank')} />
+                      </div>
+                    )}
+                  </div>
               ))}
             </div>
           )}
@@ -349,7 +411,7 @@ const ProductDetail = () => {
       {/* Recently Viewed Products */}
       {recentlyViewed.length > 0 && (
         <div className="pt-12 border-t border-surface-200 space-y-6">
-          <h2 className="text-2xl font-bold text-surface-900">Recently Viewed Products</h2>
+          <h2 className="text-2xl font-bold text-surface-300">Recently Viewed Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {recentlyViewed.map((p) => (
               <Link key={p.id} to={`/products/${p.id}`} className="card rounded-2xl overflow-hidden p-5 flex flex-col justify-between h-48 hover:border-brand-300">

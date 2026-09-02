@@ -22,5 +22,9 @@ public class ProductDto {
     private int salesCount;
     private String imageUrl;
     private Double averageRating;
+    @com.fasterxml.jackson.annotation.JsonProperty("isTopDeal")
+    private boolean isTopDeal;
+    private int discountPercentage;
+    private LocalDateTime offerExpiryDate;
     private LocalDateTime createdAt;
 }

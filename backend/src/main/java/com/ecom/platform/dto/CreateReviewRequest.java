@@ -22,4 +22,6 @@ public class CreateReviewRequest {
 
     @NotBlank(message = "Review comment is required")
     private String comment;
+
+    private String imageUrl;
 }

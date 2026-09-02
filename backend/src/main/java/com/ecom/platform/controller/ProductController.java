@@ -38,6 +38,7 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Boolean isTopDeal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "id,desc") String sort
@@ -47,7 +48,16 @@ public class ProductController {
                 Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
         
-        return ResponseEntity.ok(productService.searchProducts(keyword, categoryId, minPrice, maxPrice, minRating, pageable));
+        return ResponseEntity.ok(productService.searchProducts(keyword, categoryId, minPrice, maxPrice, minRating, isTopDeal, pageable));
+    }
+
+    @GetMapping("/top-deals")
+    @Operation(summary = "Get all active top deals")
+    public ResponseEntity<Page<ProductDto>> getTopDeals(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(productService.getTopDeals(pageable));
     }
 
     @GetMapping("/{id}")

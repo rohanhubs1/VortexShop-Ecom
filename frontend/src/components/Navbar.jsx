@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { ShoppingCart, ShoppingBag, Heart, User, LogOut, Search, LayoutDashboard, Menu, X } from 'lucide-react'
+import { ShoppingCart, ShoppingBag, Heart, User, LogOut, Search, LayoutDashboard, Menu, X, MessageSquare } from 'lucide-react'
 const Navbar = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth()
   const { cartCount } = useCart()
@@ -78,17 +78,25 @@ const Navbar = () => {
                     <span className="max-w-[80px] truncate font-medium">{user.firstName}</span>
                   </button>
                   
-                  <div className="absolute right-0 mt-1 w-48 bg-white border border-surface-200 rounded-lg shadow-lg py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
-                    <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600">
-                      <User className="mr-3 h-4 w-4" /> Profile & Addresses
-                    </Link>
-                    <Link to="/orders" className="flex items-center px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600">
-                      <ShoppingBag className="mr-3 h-4 w-4" /> Order History
-                    </Link>
-                    <div className="h-px bg-surface-100 my-1"></div>
-                    <button onClick={logout} className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left">
-                      <LogOut className="mr-3 h-4 w-4" /> Logout
-                    </button>
+                  <div className="absolute right-0 top-full pt-1 w-48 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                    <div className="bg-white border border-surface-200 rounded-lg shadow-lg py-1">
+                      <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600">
+                        <User className="mr-3 h-4 w-4" /> Profile & Addresses
+                      </Link>
+                      <Link to="/orders" className="flex items-center px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600">
+                        <ShoppingBag className="mr-3 h-4 w-4" /> Order History
+                      </Link>
+                      <Link to="/support" className="flex items-center px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600">
+                        <MessageSquare className="mr-3 h-4 w-4" /> Support Tickets
+                      </Link>
+                      <div className="border-t border-surface-100 my-1"></div>
+                      <button 
+                        onClick={() => { logout(); navigate('/login'); }}
+                        className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left font-medium"
+                      >
+                        <LogOut className="mr-3 h-4 w-4" /> Logout
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
@@ -143,6 +151,7 @@ const Navbar = () => {
               <Link to="/wishlist" onClick={() => setIsOpen(false)} className="block py-2 text-sm font-medium text-surface-700">Wishlist</Link>
               <Link to="/profile" onClick={() => setIsOpen(false)} className="block py-2 text-sm font-medium text-surface-700">My Profile</Link>
               <Link to="/orders" onClick={() => setIsOpen(false)} className="block py-2 text-sm font-medium text-surface-700">Order History</Link>
+              <Link to="/support" onClick={() => setIsOpen(false)} className="block py-2 text-sm font-medium text-surface-700">Support Tickets</Link>
               {isAdmin && (
                 <Link to="/admin/dashboard" onClick={() => setIsOpen(false)} className="block py-2 text-sm text-brand-600 font-semibold">Admin Panel</Link>
               )}

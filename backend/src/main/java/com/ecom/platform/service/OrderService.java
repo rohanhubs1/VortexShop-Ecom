@@ -6,6 +6,7 @@ import com.ecom.platform.exception.BadRequestException;
 import com.ecom.platform.exception.ResourceNotFoundException;
 import com.ecom.platform.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,7 @@ public class OrderService {
     
     private final CartService cartService;
     private final EmailService emailService;
+    private final CacheManager cacheManager;
 
     private User getAuthenticatedUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -146,6 +148,14 @@ public class OrderService {
         // Send Email notification asynchronously (mocked JavaMailSender delivery to Mailpit)
         emailService.sendOrderConfirmation(savedOrder);
 
+        // Evict caches
+        if (cacheManager.getCache("products") != null) {
+            cacheManager.getCache("products").clear();
+        }
+        if (cacheManager.getCache("productSearch") != null) {
+            cacheManager.getCache("productSearch").clear();
+        }
+
         return convertToDto(savedOrder);
     }
 
@@ -182,6 +192,14 @@ public class OrderService {
             product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
             product.setSalesCount(product.getSalesCount() - item.getQuantity());
             productRepository.save(product);
+        }
+
+        // Evict caches
+        if (cacheManager.getCache("products") != null) {
+            cacheManager.getCache("products").clear();
+        }
+        if (cacheManager.getCache("productSearch") != null) {
+            cacheManager.getCache("productSearch").clear();
         }
 
         return convertToDto(saved);
@@ -308,5 +326,9 @@ public class OrderService {
                 .customerName(order.getUser().getFirstName() + " " + order.getUser().getLastName())
                 .customerEmail(order.getUser().getEmail())
                 .build();
+    }
+
+    public long getPendingOrderCount() {
+        return orderRepository.countByStatus(OrderStatus.PENDING);
     }
 }

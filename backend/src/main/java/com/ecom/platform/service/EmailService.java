@@ -1,6 +1,7 @@
 package com.ecom.platform.service;
 
 import com.ecom.platform.entity.Order;
+import com.ecom.platform.entity.User;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,54 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final String frontendUrl = "http://localhost:5173";
+
+    public void sendVerificationEmail(User user, String token) {
+        String link = frontendUrl + "/verify?token=" + token;
+        sendHtmlEmail(user.getEmail(), "Verify your Email - Vortex Ecom", 
+            "<h3>Welcome to Vortex Ecom!</h3>" +
+            "<p>Please click the link below to verify your account:</p>" +
+            "<a href='" + link + "'>Verify My Account</a>");
+    }
+
+    public void sendPasswordResetEmail(User user, String token) {
+        String link = frontendUrl + "/reset-password?token=" + token;
+        sendHtmlEmail(user.getEmail(), "Reset your Password - Vortex Ecom", 
+            "<h3>Password Reset Request</h3>" +
+            "<p>Click the link below to reset your password. If you didn't request this, you can safely ignore this email.</p>" +
+            "<a href='" + link + "'>Reset Password</a>");
+    }
+
+    public void sendOrderDeliveredEmail(Order order) {
+        sendHtmlEmail(order.getUser().getEmail(), "Order Delivered - " + order.getOrderNumber(), 
+            "<h3>Good news!</h3>" +
+            "<p>Your order <strong>" + order.getOrderNumber() + "</strong> has been delivered.</p>" +
+            "<p>Log in to your account to print your receipt or leave a review for your items.</p>");
+    }
+
+    public void sendOrderCancelledEmail(Order order) {
+        sendHtmlEmail(order.getUser().getEmail(), "Order Cancelled - " + order.getOrderNumber(), 
+            "<h3>Order Update</h3>" +
+            "<p>Your order <strong>" + order.getOrderNumber() + "</strong> has been cancelled.</p>" +
+            "<p>If you have any questions, please reach out to our support team.</p>");
+    }
+
+    private void sendHtmlEmail(String to, String subject, String htmlBody) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("no-reply@ecom.com");
+            helper.setTo(to);
+            helper.setSubject(subject);
+            
+            String wrapper = "<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>" + htmlBody + "<p style='margin-top: 25px;'>Best regards,<br/><strong>Vortex E-Commerce Team</strong></p></div>";
+            helper.setText(wrapper, true);
+            mailSender.send(message);
+            log.info("Email successfully sent to {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send email to {}", to, e);
+        }
+    }
 
     public void sendOrderConfirmation(Order order) {
         MimeMessage message = mailSender.createMimeMessage();
@@ -51,7 +100,7 @@ public class EmailService {
             htmlContent.append("<p style='font-size: 1.2em; font-weight: bold;'>Total Paid: $").append(order.getFinalAmount()).append("</p>");
             htmlContent.append("</div>");
             
-            htmlContent.append("<p style='margin-top: 25px;'>Best regards,<br/><strong>Enterprise E-Commerce Team</strong></p>");
+            htmlContent.append("<p style='margin-top: 25px;'>Best regards,<br/><strong>Vortex E-Commerce Team</strong></p>");
             htmlContent.append("</div>");
 
             helper.setText(htmlContent.toString(), true);

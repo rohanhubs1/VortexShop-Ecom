@@ -83,7 +83,7 @@ const AdminCategories = () => {
       
       <div className="flex justify-between items-center border-b border-surface-200 pb-5">
         <div>
-          <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Product Categories</h1>
+          <h1 className="text-3xl font-extrabold text-surface-200 tracking-tight">Product Categories</h1>
           <p className="text-surface-500 text-sm mt-0.5 font-medium">Manage hierarchical subdivisions of your active product listings</p>
         </div>
         <button

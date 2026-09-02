@@ -2,7 +2,7 @@ import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react'
 import API from '../api/axios'
 import { getImageUrl } from '../utils/imageHelper'
-import { Plus, Edit2, Trash2, X, Upload, ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Upload, ChevronLeft, ChevronRight, Search, Flame } from 'lucide-react'
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([])
@@ -10,11 +10,13 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true)
   const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(0)
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
 
   // Filters
   const [keyword, setKeyword] = useState('')
   const [filterCategoryId, setFilterCategoryId] = useState('')
-  const [sort, setSort] = useState('id,desc')
+  const [sort, setSort] = useState('createdAt,desc')
+  const [filterTopDeals, setFilterTopDeals] = useState(false)
 
   // Modal forms
   const [showModal, setShowModal] = useState(false)
@@ -27,6 +29,9 @@ const AdminProducts = () => {
   const [price, setPrice] = useState('')
   const [stockQuantity, setStockQuantity] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [isTopDeal, setIsTopDeal] = useState(false)
+  const [discountPercentage, setDiscountPercentage] = useState(0)
+  const [offerExpiryDate, setOfferExpiryDate] = useState('')
   const [uploading, setUploading] = useState(false)
 
   const loadData = async () => {
@@ -35,6 +40,7 @@ const AdminProducts = () => {
       let url = `/products?page=${page}&size=10&sort=${sort}`
       if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`
       if (filterCategoryId) url += `&categoryId=${filterCategoryId}`
+      if (filterTopDeals) url += `&isTopDeal=true`
       
       const [prodRes, catRes] = await Promise.all([
         API.get(url),
@@ -55,7 +61,7 @@ const AdminProducts = () => {
       loadData()
     }, 500)
     return () => clearTimeout(delayDebounceFn)
-  }, [keyword, page, filterCategoryId, sort])
+  }, [keyword, page, filterCategoryId, sort, filterTopDeals])
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
@@ -85,7 +91,10 @@ const AdminProducts = () => {
         description,
         price: parseFloat(price),
         stockQuantity: parseInt(stockQuantity),
-        imageUrl
+        imageUrl,
+        isTopDeal,
+        discountPercentage: parseInt(discountPercentage || 0),
+        offerExpiryDate: offerExpiryDate ? (offerExpiryDate.length === 16 ? offerExpiryDate + ":00" : offerExpiryDate) : null
       }
 
       if (editId) {
@@ -109,16 +118,25 @@ const AdminProducts = () => {
     setPrice(prod.price)
     setStockQuantity(prod.stockQuantity)
     setImageUrl(prod.imageUrl || '')
+    setIsTopDeal(prod.isTopDeal || false)
+    setDiscountPercentage(prod.discountPercentage || 0)
+    setOfferExpiryDate(prod.offerExpiryDate ? prod.offerExpiryDate.substring(0, 16) : '')
     setShowModal(true)
   }
 
-  const handleDeleteClick = async (prodId) => {
-    if (!window.confirm('Are you sure you want to soft delete this product from catalog?')) return
+  const handleDeleteClick = (prodId) => {
+    setDeleteConfirmId(prodId)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return
     try {
-      await API.delete(`/admin/products/${prodId}`)
+      await API.delete(`/admin/products/${deleteConfirmId}`)
       loadData()
     } catch (err) {
       toast.error('Failed to delete product')
+    } finally {
+      setDeleteConfirmId(null)
     }
   }
 
@@ -130,6 +148,9 @@ const AdminProducts = () => {
     setPrice('')
     setStockQuantity('')
     setImageUrl('')
+    setIsTopDeal(false)
+    setDiscountPercentage(0)
+    setOfferExpiryDate('')
     setShowModal(true)
   }
 
@@ -140,6 +161,9 @@ const AdminProducts = () => {
     setPrice('')
     setStockQuantity('')
     setImageUrl('')
+    setIsTopDeal(false)
+    setDiscountPercentage(0)
+    setOfferExpiryDate('')
     setShowModal(false)
   }
 
@@ -148,7 +172,7 @@ const AdminProducts = () => {
       
       <div className="flex justify-between items-center border-b border-surface-200 pb-5">
         <div>
-          <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Manage Products</h1>
+          <h1 className="text-3xl font-extrabold text-surface-200 tracking-tight">Manage Products</h1>
           <p className="text-surface-500 text-sm mt-0.5 font-medium">Add, edit, upload images, or delete items from catalog</p>
         </div>
         <button
@@ -190,13 +214,25 @@ const AdminProducts = () => {
             onChange={(e) => { setSort(e.target.value); setPage(0); }}
             className="input-field py-2.5 text-sm w-full md:w-auto bg-white"
           >
-            <option value="id,desc">Latest Arrivals</option>
+            <option value="createdAt,desc">Latest Arrivals</option>
             <option value="salesCount,desc">Most Ordered</option>
             <option value="price,asc">Price: Low to High</option>
             <option value="price,desc">Price: High to Low</option>
             <option value="stockQuantity,desc">Stock: Highest First</option>
             <option value="stockQuantity,asc">Stock: Lowest First</option>
           </select>
+          <button
+            type="button"
+            onClick={() => { setFilterTopDeals(!filterTopDeals); setPage(0); }}
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold border flex items-center justify-center gap-1.5 transition-all w-full md:w-auto ${
+              filterTopDeals 
+                ? 'bg-brand-500 text-white border-brand-500 shadow-sm' 
+                : 'bg-white text-surface-600 border-surface-200 hover:bg-surface-50 shadow-sm'
+            }`}
+          >
+            <Flame className={`h-4 w-4 ${filterTopDeals ? 'text-white' : 'text-brand-500'}`} />
+            <span>Top Deals Only</span>
+          </button>
         </div>
       </div>
 
@@ -231,7 +267,18 @@ const AdminProducts = () => {
                     </td>
                     <td className="p-4 font-bold text-surface-900 max-w-[200px] truncate">{prod.name}</td>
                     <td className="p-4 text-surface-600 font-medium">{prod.categoryName}</td>
-                    <td className="p-4 font-black text-surface-900">${prod.price.toFixed(2)}</td>
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        {prod.isTopDeal && prod.discountPercentage > 0 ? (
+                          <>
+                            <span className="font-extrabold text-surface-900">${(prod.price * (1 - prod.discountPercentage / 100)).toFixed(2)}</span>
+                            <span className="text-[10px] text-red-500 font-bold line-through">${prod.price.toFixed(2)} (-{prod.discountPercentage}%)</span>
+                          </>
+                        ) : (
+                          <span className="font-bold text-surface-900">${prod.price.toFixed(2)}</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 rounded tracking-wider text-[10px] font-extrabold uppercase ${
                         prod.stockQuantity > 10
@@ -364,6 +411,45 @@ const AdminProducts = () => {
                 </div>
               </div>
 
+              {/* Top Deal Settings */}
+              <div className="border border-surface-200 rounded-xl p-4 space-y-4 bg-surface-50">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isTopDeal}
+                    onChange={(e) => setIsTopDeal(e.target.checked)}
+                    className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-surface-300 rounded"
+                  />
+                  <span className="text-sm font-bold text-surface-900">Mark as Top Deal</span>
+                </label>
+                
+                {isTopDeal && (
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-surface-200">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-surface-600 uppercase tracking-wider">Discount (%)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={discountPercentage}
+                        onChange={(e) => setDiscountPercentage(e.target.value)}
+                        placeholder="20"
+                        className="input-field py-2.5 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-surface-600 uppercase tracking-wider">Expiry Date</label>
+                      <input
+                        type="datetime-local"
+                        value={offerExpiryDate}
+                        onChange={(e) => setOfferExpiryDate(e.target.value)}
+                        className="input-field py-2.5 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Mock Image Upload */}
               <div className="space-y-2 border-t border-surface-200 pt-4">
                 <label className="block text-xs font-bold text-surface-600 uppercase tracking-wider">Product Image</label>
@@ -407,6 +493,30 @@ const AdminProducts = () => {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white border border-surface-200 rounded-2xl w-full max-w-sm p-6 shadow-xl space-y-6">
+            <h3 className="font-bold text-lg text-surface-900">Confirm Deletion</h3>
+            <p className="text-sm text-surface-600">Are you sure you want to completely delete this product from the catalog? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3 pt-4 border-t border-surface-200 mt-2">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="btn-secondary py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="btn-primary py-2 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+              >
+                Delete Product
+              </button>
+            </div>
           </div>
         </div>
       )}

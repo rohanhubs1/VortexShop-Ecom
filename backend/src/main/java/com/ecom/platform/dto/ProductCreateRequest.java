@@ -32,4 +32,9 @@ public class ProductCreateRequest {
     private int stockQuantity;
 
     private String imageUrl;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isTopDeal")
+    private boolean isTopDeal = false;
+    private int discountPercentage = 0;
+    private java.time.LocalDateTime offerExpiryDate;
 }

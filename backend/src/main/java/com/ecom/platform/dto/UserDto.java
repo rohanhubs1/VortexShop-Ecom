@@ -16,4 +16,5 @@ public class UserDto {
     private String lastName;
     private String phone;
     private List<String> roles;
+    private boolean isVerified;
 }

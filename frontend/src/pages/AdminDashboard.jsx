@@ -63,7 +63,7 @@ const AdminDashboard = () => {
   return (
     <div className="py-6 space-y-8">
       <div className="border-b border-surface-200 pb-6">
-        <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Admin Dashboard</h1>
+        <h1 className="text-3xl font-extrabold text-surface-200 tracking-tight">Admin Dashboard</h1>
         <p className="text-surface-500 text-sm mt-1">Overview of business metrics, transaction stats, and inventory volumes</p>
       </div>
 

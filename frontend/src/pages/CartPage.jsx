@@ -73,7 +73,7 @@ const CartPage = () => {
   return (
     <div className="py-8 space-y-8 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Shopping Cart</h1>
+        <h1 className="text-3xl font-extrabold text-surface-300 tracking-tight">Shopping Cart</h1>
         <p className="text-surface-500 text-sm mt-1">Review items in your active shopping session</p>
       </div>
 

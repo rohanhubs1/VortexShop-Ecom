@@ -29,6 +29,7 @@ public class Cart {
     @Builder.Default
     private Set<CartItem> items = new HashSet<>();
 
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

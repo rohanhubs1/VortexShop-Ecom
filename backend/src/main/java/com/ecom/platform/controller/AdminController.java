@@ -30,9 +30,10 @@ public class AdminController {
     private final OrderService orderService;
     private final ProductService productService;
     private final CategoryService categoryService;
-    private final UserService userService;
     private final CouponService couponService;
+    private final UserService userService;
     private final ImageStorageService imageStorageService;
+    private final SupportService supportService;
 
     // Dashboard Statistics
     @GetMapping("/dashboard")
@@ -145,5 +146,34 @@ public class AdminController {
     public ResponseEntity<Void> deleteCoupon(@PathVariable Long id) {
         couponService.deleteCoupon(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Support Tickets
+    @GetMapping("/support")
+    @Operation(summary = "List all customer support tickets")
+    public ResponseEntity<List<SupportTicketDto>> getAllTickets() {
+        return ResponseEntity.ok(supportService.getAllTickets());
+    }
+
+    @PutMapping("/support/{id}/resolve")
+    @Operation(summary = "Mark a support ticket as resolved")
+    public ResponseEntity<SupportTicketDto> resolveTicket(@PathVariable Long id) {
+        return ResponseEntity.ok(supportService.resolveTicket(id));
+    }
+
+    @PostMapping("/support/{id}/reply")
+    @Operation(summary = "Admin reply to a support ticket")
+    public ResponseEntity<SupportTicketDto> replyTicket(@PathVariable Long id, @Valid @RequestBody ReplyMessageRequest request) {
+        return ResponseEntity.ok(supportService.replyToTicket(id, request, "ADMIN"));
+    }
+
+    // Notifications
+    @GetMapping("/notifications/summary")
+    @Operation(summary = "Get notification summary for admin dashboard")
+    public ResponseEntity<Map<String, Long>> getNotificationSummary() {
+        Map<String, Long> summary = new HashMap<>();
+        summary.put("pendingOrders", orderService.getPendingOrderCount());
+        summary.put("openTickets", supportService.getOpenTicketCount());
+        return ResponseEntity.ok(summary);
     }
 }

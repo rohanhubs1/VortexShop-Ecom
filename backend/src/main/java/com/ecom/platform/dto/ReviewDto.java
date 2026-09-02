@@ -16,5 +16,6 @@ public class ReviewDto {
     private Long productId;
     private int rating;
     private String comment;
+    private String imageUrl;
     private LocalDateTime createdAt;
 }

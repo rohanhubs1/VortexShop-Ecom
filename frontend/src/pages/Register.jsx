@@ -19,6 +19,18 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    
+    // Validations
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+    const phoneRegex = /^\d{10}$/
+    if (phone && !phoneRegex.test(phone)) {
+      setError('Please enter a valid 10-digit phone number')
+      return
+    }
+
     setLoading(true)
     try {
       await register(firstName, lastName, email, password, phone)

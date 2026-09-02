@@ -160,6 +160,7 @@ public class UserService {
                 .lastName(user.getLastName())
                 .phone(user.getPhone())
                 .roles(user.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toList()))
+                .isVerified(user.isVerified())
                 .build();
     }
 }

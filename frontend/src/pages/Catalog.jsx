@@ -23,7 +23,7 @@ const Catalog = () => {
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [minRating, setMinRating] = useState('')
-  const [sort, setSort] = useState('id,desc')
+  const [sort, setSort] = useState('createdAt,desc')
   const [page, setPage] = useState(0)
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const Catalog = () => {
     setMinPrice('')
     setMaxPrice('')
     setMinRating('')
-    setSort('id,desc')
+    setSort('createdAt,desc')
     setPage(0)
     setSearchParams({})
   }
@@ -115,7 +115,7 @@ const Catalog = () => {
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-200 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Products Catalog</h1>
+          <h1 className="text-3xl font-extrabold text-surface-300 tracking-tight">Products Catalog</h1>
           <p className="text-surface-500 text-sm mt-1">Showing {products.length} of {totalElements} results</p>
         </div>
         
@@ -137,7 +137,7 @@ const Catalog = () => {
             onChange={(e) => setSort(e.target.value)}
             className="bg-white border border-surface-300 text-surface-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm"
           >
-            <option value="id,desc">Latest Arrivals</option>
+            <option value="createdAt,desc">Latest Arrivals</option>
             <option value="price,asc">Price: Low to High</option>
             <option value="price,desc">Price: High to Low</option>
             <option value="averageRating,desc">Highest Rated</option>
@@ -254,61 +254,78 @@ const Catalog = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((prod) => (
                 <div key={prod.id} className="w-full h-full card flex flex-col relative group">
-                  
-                  {/* Badges */}
-                  {prod.averageRating > 4.7 && (
-                    <div className="absolute top-3 left-3 z-10 bg-brand-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 uppercase tracking-wider">
-                      <Flame className="h-3 w-3" />
-                      <span>TOP RATED</span>
-                    </div>
-                  )}
-
-                  {/* Favorite Toggle */}
-                  <button
-                    onClick={() => handleWishlist(prod.id)}
-                    className={`absolute top-3 right-3 p-2 rounded-full border transition-all z-10 bg-white/80 backdrop-blur-sm shadow-sm hover:scale-105 ${
-                      isInWishlist(prod.id)
-                        ? 'border-red-100 text-red-500'
-                        : 'border-transparent text-surface-400 hover:text-brand-500 hover:border-brand-100'
-                    }`}
-                  >
-                    <Heart className={`h-4 w-4 ${isInWishlist(prod.id) ? 'fill-current' : ''}`} />
-                  </button>
-
-                  {/* Product Image Wrapper */}
-                  <div className="relative bg-surface-50 h-56 flex items-center justify-center p-6 rounded-t-xl overflow-hidden border-b border-surface-100 group-hover:bg-surface-100 transition-colors duration-300">
-                    <img 
-                      src={getImageUrl(prod.imageUrl)} 
-                      alt={prod.name} 
-                      className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
-                    />
-                  </div>
-
-                  {/* Details */}
-                  <div className="p-4 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] text-brand-600 uppercase tracking-widest font-bold">{prod.categoryName}</span>
-                      </div>
-                      <Link to={`/products/${prod.id}`} className="block font-bold text-base text-surface-900 hover:text-brand-600 transition-colors line-clamp-2 leading-tight">
-                        {prod.name}
-                      </Link>
-                      
-                      <div className="flex items-center space-x-1.5 pt-1">
-                        <div className="flex text-amber-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(prod.averageRating || 4.8) ? 'fill-current' : 'text-surface-200'}`} />
-                          ))}
+                                     {/* Badges */}
+                    <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+                      {prod.isTopDeal && (
+                        <div className="bg-brand-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 uppercase tracking-wider">
+                          <Flame className="h-3 w-3" />
+                          <span>TOP DEAL</span>
                         </div>
-                        <span className="text-xs text-surface-500 font-medium">({prod.averageRating || '4.8'})</span>
-                      </div>
+                      )}
+                      {prod.averageRating > 4.7 && (
+                        <div className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 uppercase tracking-wider">
+                          <Star className="h-3 w-3 fill-current" />
+                          <span>TOP RATED</span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-end justify-between mt-4 pt-4 border-t border-surface-100">
-                      <div className="flex flex-col">
-                        <span className="text-lg font-extrabold text-surface-900">${prod.price}</span>
+                    {/* Favorite Toggle */}
+                    <button
+                      onClick={() => handleWishlist(prod.id)}
+                      className={`absolute top-3 right-3 p-2 rounded-full border transition-all z-10 bg-white/80 backdrop-blur-sm shadow-sm hover:scale-105 ${
+                        isInWishlist(prod.id)
+                          ? 'border-red-100 text-red-500'
+                          : 'border-transparent text-surface-400 hover:text-brand-500 hover:border-brand-100'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${isInWishlist(prod.id) ? 'fill-current' : ''}`} />
+                    </button>
+
+                    {/* Product Image Wrapper */}
+                    <div className="relative bg-surface-50 h-56 flex items-center justify-center p-6 rounded-t-xl overflow-hidden border-b border-surface-100 group-hover:bg-surface-100 transition-colors duration-300">
+                      <img 
+                        src={getImageUrl(prod.imageUrl)} 
+                        alt={prod.name} 
+                        className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+                      />
+                    </div>
+
+                    {/* Details */}
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] text-brand-600 uppercase tracking-widest font-bold">{prod.categoryName}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${prod.stockQuantity > 5 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                            {prod.stockQuantity > 5 ? 'IN STOCK' : `ONLY ${prod.stockQuantity} LEFT`}
+                          </span>
+                        </div>
+                        <Link to={`/products/${prod.id}`} className="block font-bold text-base text-surface-900 hover:text-brand-600 transition-colors line-clamp-2 leading-tight">
+                          {prod.name}
+                        </Link>
+                        
+                        <div className="flex items-center space-x-1.5 pt-1">
+                          <div className="flex text-amber-400">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(prod.averageRating || 4.8) ? 'fill-current' : 'text-surface-200'}`} />
+                            ))}
+                          </div>
+                          <span className="text-xs text-surface-500 font-medium">({prod.averageRating || '4.8'})</span>
+                        </div>
                       </div>
-                      <button
+
+                      <div className="flex items-end justify-between mt-4 pt-4 border-t border-surface-100">
+                        <div className="flex flex-col">
+                          {prod.isTopDeal && prod.discountPercentage > 0 && (
+                            <span className="text-xs text-surface-400 line-through">${prod.price.toFixed(2)}</span>
+                          )}
+                          <span className="text-lg font-extrabold text-surface-900">
+                            ${prod.isTopDeal && prod.discountPercentage > 0 
+                              ? (prod.price * (1 - prod.discountPercentage / 100)).toFixed(2) 
+                              : prod.price}
+                          </span>
+                        </div>
+                        <button
                         onClick={() => handleAddToCart(prod.id)}
                         disabled={prod.stockQuantity < 1}
                         className="btn-primary py-1.5 px-4 text-xs shadow-sm hover:shadow-md"

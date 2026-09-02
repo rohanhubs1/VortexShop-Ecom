@@ -43,6 +43,10 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "is_verified")
+    @Builder.Default
+    private boolean isVerified = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

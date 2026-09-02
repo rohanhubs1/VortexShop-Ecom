@@ -76,9 +76,12 @@ public class CartService {
         cartItem.setQuantity(newQuantity);
         cartItemRepository.save(cartItem);
 
-        // Refresh cart
-        Cart refreshedCart = cartRepository.findById(cart.getId()).orElse(cart);
-        return convertToDto(refreshedCart);
+        // Ensure the cart's items collection is updated in memory
+        if (!cart.getItems().contains(cartItem)) {
+            cart.getItems().add(cartItem);
+        }
+
+        return convertToDto(cart);
     }
 
     @Transactional
@@ -133,7 +136,7 @@ public class CartService {
         List<CartItemDto> items = cart.getItems().stream()
                 .sorted((a, b) -> a.getId().compareTo(b.getId()))
                 .map(item -> {
-            BigDecimal price = item.getProduct().getPrice();
+            BigDecimal price = item.getProduct().getFinalPrice();
             BigDecimal subTotal = price.multiply(BigDecimal.valueOf(item.getQuantity()));
             return CartItemDto.builder()
                     .id(item.getId())

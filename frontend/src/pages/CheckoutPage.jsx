@@ -121,7 +121,7 @@ const CheckoutPage = () => {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Checkout</h1>
+          <h1 className="text-3xl font-extrabold text-surface-300 tracking-tight">Checkout</h1>
           <p className="text-surface-500 text-sm mt-1">Select a shipping address and complete your transaction</p>
         </div>
       </div>

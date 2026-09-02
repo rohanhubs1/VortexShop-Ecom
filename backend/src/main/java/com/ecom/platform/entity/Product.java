@@ -58,4 +58,24 @@ public class Product {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    
+    @Column(name = "is_top_deal")
+    @Builder.Default
+    private boolean isTopDeal = false;
+
+    @Column(name = "discount_percentage")
+    @Builder.Default
+    private int discountPercentage = 0;
+
+    @Column(name = "offer_expiry_date")
+    private LocalDateTime offerExpiryDate;
+
+
+    public BigDecimal getFinalPrice() {
+        if (isTopDeal && discountPercentage > 0 && (offerExpiryDate == null || offerExpiryDate.isAfter(LocalDateTime.now()))) {
+            BigDecimal discountMultiplier = BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(discountPercentage).divide(BigDecimal.valueOf(100)));
+            return price.multiply(discountMultiplier);
+        }
+        return price;
+    }
 }

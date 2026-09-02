@@ -21,7 +21,11 @@ import CheckoutPage from './pages/CheckoutPage'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import OrderSuccessPage from './pages/OrderSuccessPage'
 import Login from './pages/Login'
+import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Register from './pages/Register'
+import ContactSupport from './pages/ContactSupport'
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard'
@@ -30,6 +34,7 @@ import AdminCategories from './pages/AdminCategories'
 import AdminOrders from './pages/AdminOrders'
 import AdminCoupons from './pages/AdminCoupons'
 import AdminCustomers from './pages/AdminCustomers'
+import AdminSupport from './pages/AdminSupport'
 
 // Layout Wrapper
 const AppLayout = () => {
@@ -48,6 +53,7 @@ const AppLayout = () => {
             <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/coupons" element={<ProtectedRoute adminOnly><AdminCoupons /></ProtectedRoute>} />
             <Route path="/admin/customers" element={<ProtectedRoute adminOnly><AdminCustomers /></ProtectedRoute>} />
+            <Route path="/admin/support" element={<ProtectedRoute adminOnly><AdminSupport /></ProtectedRoute>} />
           </Routes>
         </main>
       </div>
@@ -63,6 +69,9 @@ const AppLayout = () => {
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/register" element={<Register />} />
           
           {/* Protected Customer Routes */}
@@ -72,6 +81,7 @@ const AppLayout = () => {
           <Route path="/orders" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><ContactSupport /></ProtectedRoute>} />
         </Routes>
       </main>
       <Footer />

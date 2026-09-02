@@ -20,7 +20,7 @@ const WishlistPage = () => {
   return (
     <div className="py-8 space-y-8 max-w-7xl mx-auto">
       <div className="border-b border-surface-200 pb-6">
-        <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">My Wishlist</h1>
+        <h1 className="text-3xl font-extrabold text-surface-300 tracking-tight">My Wishlist</h1>
         <p className="text-surface-500 text-sm mt-1">Keep track of items you want to purchase</p>
       </div>
 

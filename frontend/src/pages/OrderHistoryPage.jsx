@@ -2,7 +2,7 @@ import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import API from '../api/axios'
-import { Calendar, ChevronDown, ChevronUp, AlertCircle, ShoppingBag, CheckCircle, Info } from 'lucide-react'
+import { Calendar, ChevronDown, ChevronUp, AlertCircle, ShoppingBag, CheckCircle, Info, Printer } from 'lucide-react'
 
 const OrderHistoryPage = () => {
   const location = useLocation()
@@ -71,7 +71,7 @@ const OrderHistoryPage = () => {
       
       {/* Page Title */}
       <div className="border-b border-surface-200 pb-6">
-        <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Order History</h1>
+        <h1 className="text-3xl font-extrabold text-surface-300 tracking-tight">Order History</h1>
         <p className="text-surface-500 text-sm mt-1">Track shipping details and review past purchase transactions</p>
       </div>
 
@@ -109,8 +109,16 @@ const OrderHistoryPage = () => {
                     <div className="h-12 w-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center shrink-0 border border-brand-100">
                       <ShoppingBag className="h-6 w-6" />
                     </div>
-                    <div>
-                      <span className="font-bold text-sm text-surface-900 block">{order.orderNumber}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-surface-900 block">{order.orderNumber}</span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); window.print(); }}
+                          className="print:hidden text-brand-600 hover:bg-brand-50 p-2 rounded-lg flex items-center gap-1 text-xs font-semibold"
+                        >
+                          <Printer className="h-4 w-4" /> Print
+                        </button>
+                      </div>
                       <div className="flex items-center space-x-1.5 text-xs text-surface-500 mt-1 font-medium">
                         <Calendar className="h-3.5 w-3.5" />
                         <span>{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>

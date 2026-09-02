@@ -48,14 +48,20 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "product-search", key = "#keyword + '-' + #categoryId + '-' + #minPrice + '-' + #maxPrice + '-' + #minRating + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
-    public Page<ProductDto> searchProducts(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Double minRating, Pageable pageable) {
-        log.info("Fetching products from DB for keyword: {}, categoryId: {}", keyword, categoryId);
+    @Cacheable(value = "product-search", key = "#keyword + '-' + #categoryId + '-' + #minPrice + '-' + #maxPrice + '-' + #minRating + '-' + (#isTopDeal != null ? #isTopDeal.toString() : 'null') + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
+    public Page<ProductDto> searchProducts(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Double minRating, Boolean isTopDeal, Pageable pageable) {
+        log.info("Fetching products from DB for keyword: {}, categoryId: {}, isTopDeal: {}", keyword, categoryId, isTopDeal);
         Page<Product> productPage = productRepository.searchProducts(
                 keyword != null && !keyword.trim().isEmpty() ? keyword.trim() : null,
-                categoryId, minPrice, maxPrice, minRating, pageable
+                categoryId, minPrice, maxPrice, minRating, isTopDeal, pageable
         );
         return productPage.map(this::convertToDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductDto> getTopDeals(Pageable pageable) {
+        return productRepository.findByIsTopDealTrueAndDeletedFalse(pageable)
+                .map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
@@ -149,6 +155,7 @@ public class ProductService {
                 .product(product)
                 .rating(request.getRating())
                 .comment(request.getComment())
+                .imageUrl(request.getImageUrl())
                 .build();
 
         Review savedReview = reviewRepository.save(review);
@@ -192,6 +199,9 @@ public class ProductService {
                 .salesCount(product.getSalesCount())
                 .imageUrl(product.getImageUrl())
                 .averageRating(product.getAverageRating())
+                .isTopDeal(product.isTopDeal())
+                .discountPercentage(product.getDiscountPercentage())
+                .offerExpiryDate(product.getOfferExpiryDate())
                 .createdAt(product.getCreatedAt())
                 .build();
     }
@@ -204,6 +214,7 @@ public class ProductService {
                 .productId(review.getProduct().getId())
                 .rating(review.getRating())
                 .comment(review.getComment())
+                .imageUrl(review.getImageUrl())
                 .createdAt(review.getCreatedAt())
                 .build();
     }

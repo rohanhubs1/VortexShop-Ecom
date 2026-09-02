@@ -50,3 +50,22 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: white !important;
+  }
+  nav, aside, header, footer, .sidebar, .print\:hidden {
+    display: none !important;
+  }
+  main, .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .border, .border-surface-200 {
+    border-color: #000 !important;
+  }
+}

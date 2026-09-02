@@ -24,7 +24,7 @@ const AdminCustomers = () => {
     <div className="py-6 space-y-6">
       
       <div className="border-b border-surface-200 pb-5">
-        <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">Registered Customers</h1>
+        <h1 className="text-3xl font-extrabold text-surface-200 tracking-tight">Registered Customers</h1>
         <p className="text-surface-500 text-sm mt-0.5 font-medium">List of users registered under the customer security role</p>
       </div>
 

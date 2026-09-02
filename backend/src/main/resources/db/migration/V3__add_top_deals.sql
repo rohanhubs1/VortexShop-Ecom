@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN is_top_deal BOOLEAN DEFAULT FALSE; ALTER TABLE products ADD COLUMN discount_percentage INT DEFAULT 0; ALTER TABLE products ADD COLUMN offer_expiry_date TIMESTAMP NULL;
