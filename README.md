@@ -160,6 +160,28 @@ No manual SQL import is required.
 
 ---
 
+## Testing
+
+The backend has 182 automated tests written with JUnit 5, Mockito, Spring MockMvc and an in-memory H2 database. They do not need MySQL, a JWT secret or mail credentials.
+
+```bash
+cd backend
+mvn test
+```
+
+Use JDK 21, the version set in `pom.xml`.
+
+| Layer | What is tested | How |
+| --- | --- | --- |
+| Services | Checkout (stock locking, coupons, top-deal pricing), cart, products, reviews, coupons, auth, addresses, dashboard, support, email | JUnit 5 + Mockito unit tests |
+| Security | JWT generation, expiry and signature checks, the JWT request filter | Real JJWT keys, no mocks |
+| Controllers | Auth, Product, Cart and Order endpoints, role rules, validation errors, error responses | `@WebMvcTest` with the real `SecurityConfig` |
+| Repositories | Product search filters, top-deal expiry, atomic stock decrement | `@DataJpaTest` on H2 |
+
+**Coverage (JaCoCo):** the service layer has **95.4% line coverage** (895 of 938 lines) and 81.7% branch coverage. `mvn test` writes the HTML report to `backend/target/site/jacoco/index.html`. Lombok-generated getters and builders are left out of the count (see `backend/lombok.config`).
+
+---
+
 ## Security
 
 * JWT Authentication
