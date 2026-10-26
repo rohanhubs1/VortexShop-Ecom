@@ -71,8 +71,12 @@ public class Product {
     private LocalDateTime offerExpiryDate;
 
 
+    public boolean isTopDeal() {
+        return isTopDeal && (offerExpiryDate == null || offerExpiryDate.isAfter(LocalDateTime.now()));
+    }
+
     public BigDecimal getFinalPrice() {
-        if (isTopDeal && discountPercentage > 0 && (offerExpiryDate == null || offerExpiryDate.isAfter(LocalDateTime.now()))) {
+        if (isTopDeal() && discountPercentage > 0) {
             BigDecimal discountMultiplier = BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(discountPercentage).divide(BigDecimal.valueOf(100)));
             return price.multiply(discountMultiplier);
         }

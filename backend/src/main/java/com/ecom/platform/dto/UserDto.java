@@ -17,4 +17,5 @@ public class UserDto {
     private String phone;
     private List<String> roles;
     private boolean isVerified;
+    private boolean active;
 }

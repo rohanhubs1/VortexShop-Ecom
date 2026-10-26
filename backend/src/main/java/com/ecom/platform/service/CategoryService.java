@@ -5,6 +5,7 @@ import com.ecom.platform.entity.Category;
 import com.ecom.platform.exception.BadRequestException;
 import com.ecom.platform.exception.ResourceNotFoundException;
 import com.ecom.platform.repository.CategoryRepository;
+import com.ecom.platform.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories() {
@@ -75,6 +77,11 @@ public class CategoryService {
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        
+        if (productRepository.existsByCategoryId(id)) {
+            throw new BadRequestException("Cannot delete category because it contains associated products. Please reassign or delete the products first.");
+        }
+        
         categoryRepository.delete(category);
     }
 

@@ -28,4 +28,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByOrderNumber(String orderNumber);
     
     long countByStatus(com.ecom.platform.entity.OrderStatus status);
+    boolean existsByUserAndStatusIn(User user, List<com.ecom.platform.entity.OrderStatus> statuses);
 }

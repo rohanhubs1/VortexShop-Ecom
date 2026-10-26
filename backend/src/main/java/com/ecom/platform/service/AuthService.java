@@ -43,7 +43,14 @@ public class AuthService {
         }
         String jwt = tokenProvider.generateToken(authentication);
         UserDto userDto = convertToDto(user);
-        return AuthResponse.builder().token(jwt).email(user.getEmail()).firstName(user.getFirstName()).lastName(user.getLastName()).roles(user.getRoles().stream().map(r -> r.getName().name()).collect(java.util.stream.Collectors.toList())).build();
+        return AuthResponse.builder()
+                .token(jwt)
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .roles(user.getRoles().stream().map(r -> r.getName().name()).collect(java.util.stream.Collectors.toList()))
+                .build();
     }
 
     @Transactional

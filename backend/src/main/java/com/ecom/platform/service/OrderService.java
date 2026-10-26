@@ -34,6 +34,7 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final CouponRepository couponRepository;
     private final UserRepository userRepository;
+    private final jakarta.persistence.EntityManager entityManager;
     
     private final CartService cartService;
     private final EmailService emailService;
@@ -62,16 +63,36 @@ public class OrderService {
         Address address = addressRepository.findByIdAndUserAndDeletedFalse(request.getShippingAddressId(), user)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipping address not found"));
 
-        // Validate stock for all items
+        // Extract and sort Product IDs to prevent MySQL deadlocks during concurrent checkouts
+        List<Long> productIds = cart.getItems().stream()
+                .map(item -> item.getProduct().getId())
+                .sorted()
+                .collect(Collectors.toList());
+
+        // Acquire Pessimistic Write locks on all products in strict ID order
+        List<Product> lockedProducts = productRepository.findAllByIdForUpdate(productIds);
+        // Force Hibernate to clear the L1 cache for these entities and reload the freshly locked data
+        lockedProducts.forEach(entityManager::refresh);
+
+        java.util.Map<Long, Product> productMap = lockedProducts.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        // Validate stock and active status for all items using the freshly locked DB state
         for (CartItem item : cart.getItems()) {
-            if (item.getProduct().getStockQuantity() < item.getQuantity()) {
-                throw new BadRequestException("Product " + item.getProduct().getName() + " is out of stock or does not have sufficient quantity (" + item.getProduct().getStockQuantity() + " remaining).");
+            Product freshProduct = productMap.get(item.getProduct().getId());
+            if (freshProduct == null || freshProduct.isDeleted()) {
+                throw new BadRequestException("Product " + item.getProduct().getName() + " is no longer available for purchase.");
             }
+            if (freshProduct.getStockQuantity() < item.getQuantity()) {
+                throw new BadRequestException("Product " + freshProduct.getName() + " is out of stock or does not have sufficient quantity (" + freshProduct.getStockQuantity() + " remaining).");
+            }
+            // Update the cart item to reference the locked, fresh product for later calculations
+            item.setProduct(freshProduct);
         }
 
         // Calculate totals
         BigDecimal subTotal = cart.getItems().stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> item.getProduct().getFinalPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal discount = BigDecimal.ZERO;
@@ -126,15 +147,19 @@ public class OrderService {
         // Save items & decrement stock & increment sales count
         for (CartItem item : cart.getItems()) {
             Product product = item.getProduct();
-            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
-            product.setSalesCount(product.getSalesCount() + item.getQuantity());
-            productRepository.save(product);
+            
+            // ATOMIC DATABASE UPDATE - 100% immune to concurrent overwrites
+            int updatedRows = productRepository.decrementStockIfAvailable(product.getId(), item.getQuantity());
+            if (updatedRows == 0) {
+                // If it returns 0, another concurrent transaction bought it milliseconds before us!
+                throw new BadRequestException("Product " + product.getName() + " sold out while processing your order! Please try again.");
+            }
 
             OrderItem orderItem = OrderItem.builder()
                     .order(savedOrder)
                     .product(product)
                     .quantity(item.getQuantity())
-                    .price(product.getPrice())
+                    .price(product.getFinalPrice())
                     .build();
 
             orderItems.add(orderItemRepository.save(orderItem));

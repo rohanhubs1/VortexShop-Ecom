@@ -13,8 +13,6 @@ import com.ecom.platform.repository.ReviewRepository;
 import com.ecom.platform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,24 +46,22 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "product-search", key = "#keyword + '-' + #categoryId + '-' + #minPrice + '-' + #maxPrice + '-' + #minRating + '-' + (#isTopDeal != null ? #isTopDeal.toString() : 'null') + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     public Page<ProductDto> searchProducts(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Double minRating, Boolean isTopDeal, Pageable pageable) {
         log.info("Fetching products from DB for keyword: {}, categoryId: {}, isTopDeal: {}", keyword, categoryId, isTopDeal);
         Page<Product> productPage = productRepository.searchProducts(
                 keyword != null && !keyword.trim().isEmpty() ? keyword.trim() : null,
-                categoryId, minPrice, maxPrice, minRating, isTopDeal, pageable
+                categoryId, minPrice, maxPrice, minRating, isTopDeal, java.time.LocalDateTime.now(), pageable
         );
         return productPage.map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
     public Page<ProductDto> getTopDeals(Pageable pageable) {
-        return productRepository.findByIsTopDealTrueAndDeletedFalse(pageable)
+        return productRepository.findActiveTopDeals(java.time.LocalDateTime.now(), pageable)
                 .map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "products", key = "#id")
     public ProductDto getProductById(Long id) {
         log.info("Fetching product ID: {} from DB", id);
         Product product = productRepository.findByIdAndDeletedFalse(id)
@@ -81,7 +77,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = {"products", "product-search"}, allEntries = true)
     public ProductDto createProduct(ProductCreateRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -99,6 +94,9 @@ public class ProductService {
                 .price(request.getPrice())
                 .stockQuantity(request.getStockQuantity())
                 .imageUrl(request.getImageUrl())
+                .isTopDeal(request.isTopDeal())
+                .discountPercentage(request.getDiscountPercentage())
+                .offerExpiryDate(request.getOfferExpiryDate())
                 .averageRating(0.0)
                 .deleted(false)
                 .build();
@@ -108,7 +106,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = {"products", "product-search"}, allEntries = true)
     public ProductDto updateProduct(Long id, ProductCreateRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -116,12 +113,21 @@ public class ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+        String slug = generateSlug(request.getName());
+        if (productRepository.existsBySlugAndIdNot(slug, id)) {
+            slug = slug + "-" + System.currentTimeMillis() % 1000;
+        }
+
         product.setCategory(category);
         product.setName(request.getName());
-        product.setSlug(generateSlug(request.getName()));
+        product.setSlug(slug);
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
+        product.setTopDeal(request.isTopDeal());
+        product.setDiscountPercentage(request.getDiscountPercentage());
+        product.setOfferExpiryDate(request.getOfferExpiryDate());
+        
         if (request.getImageUrl() != null) {
             product.setImageUrl(request.getImageUrl());
         }
@@ -131,7 +137,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = {"products", "product-search"}, allEntries = true)
     public void softDeleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -140,7 +145,6 @@ public class ProductService {
     }
 
     @Transactional
-    @CacheEvict(value = {"products", "product-search"}, allEntries = true)
     public ReviewDto addReview(CreateReviewRequest request) {
         User user = getAuthenticatedUser();
         Product product = productRepository.findByIdAndDeletedFalse(request.getProductId())
@@ -203,6 +207,7 @@ public class ProductService {
                 .discountPercentage(product.getDiscountPercentage())
                 .offerExpiryDate(product.getOfferExpiryDate())
                 .createdAt(product.getCreatedAt())
+                .deleted(product.isDeleted())
                 .build();
     }
 
