@@ -28,6 +28,13 @@ public class UserProfileController {
         return ResponseEntity.ok(userService.updateProfile(request));
     }
 
+    @PutMapping("/deactivate")
+    @Operation(summary = "Deactivate own account")
+    public ResponseEntity<Void> deactivateMyAccount() {
+        userService.deactivateMyAccount();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/addresses")
     @Operation(summary = "List all saved addresses for current user")
     public ResponseEntity<List<AddressDto>> getAddresses() {

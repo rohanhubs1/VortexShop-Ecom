@@ -27,4 +27,5 @@ public class ProductDto {
     private int discountPercentage;
     private LocalDateTime offerExpiryDate;
     private LocalDateTime createdAt;
+    private boolean deleted;
 }

@@ -56,6 +56,12 @@ public class AdminController {
         return ResponseEntity.ok(userService.getAllCustomers());
     }
 
+    @PutMapping("/customers/{id}/status")
+    @Operation(summary = "Update customer active status")
+    public ResponseEntity<UserDto> setCustomerStatus(@PathVariable Long id, @RequestParam boolean active) {
+        return ResponseEntity.ok(userService.setUserStatus(id, active));
+    }
+
     // Product CRUD
     @PostMapping("/products")
     @Operation(summary = "Create a new product in the catalog")

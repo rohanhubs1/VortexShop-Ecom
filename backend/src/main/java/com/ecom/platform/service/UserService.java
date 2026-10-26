@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final com.ecom.platform.repository.OrderRepository orderRepository;
     private final AddressRepository addressRepository;
 
     private User getAuthenticatedUser() {
@@ -152,6 +153,24 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
+    public void deactivateMyAccount() {
+        User user = getAuthenticatedUser();
+        boolean hasActiveOrders = orderRepository.existsByUserAndStatusIn(user, java.util.Arrays.asList(com.ecom.platform.entity.OrderStatus.PENDING, com.ecom.platform.entity.OrderStatus.CONFIRMED, com.ecom.platform.entity.OrderStatus.PACKED, com.ecom.platform.entity.OrderStatus.SHIPPED));
+        if (hasActiveOrders) {
+            throw new BadRequestException("Cannot deactivate account while there are active orders.");
+        }
+        user.setActive(false);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public UserDto setUserStatus(Long id, boolean active) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setActive(active);
+        return convertToUserDto(userRepository.save(user));
+    }
+
     private UserDto convertToUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
@@ -160,7 +179,7 @@ public class UserService {
                 .lastName(user.getLastName())
                 .phone(user.getPhone())
                 .roles(user.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toList()))
-                .isVerified(user.isVerified())
+                .isVerified(user.isVerified()).active(user.isActive())
                 .build();
     }
 }
