@@ -71,15 +71,22 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void tokenSignedWithAnotherKeyIsNeverAccepted() {
+    void tokenSignedWithAnotherKeyIsRejected() {
         String forged = new JwtTokenProvider(OTHER_SECRET, 60_000)
                 .generateToken(authenticationFor(user(1L, "attacker@example.com", RoleName.ROLE_ADMIN)));
 
-        // validateToken does not catch SignatureException, so a forged token surfaces as an exception
-        // rather than "false". JwtAuthenticationFilter's catch-all still leaves the request unauthenticated
-        // (see JwtAuthenticationFilterTest).
-        assertThatThrownBy(() -> provider.validateToken(forged)).isInstanceOf(SignatureException.class);
+        assertThat(provider.validateToken(forged)).isFalse();
         assertThatThrownBy(() -> provider.getUsernameFromToken(forged)).isInstanceOf(SignatureException.class);
+    }
+
+    @Test
+    void tamperedPayloadIsRejected() {
+        String token = provider.generateToken(authenticationFor(user(1L, "customer@example.com", RoleName.ROLE_CUSTOMER)));
+        String[] parts = token.split("\\.");
+        String forgedPayload = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString("{\"sub\":\"admin@example.com\",\"roles\":[\"ROLE_ADMIN\"]}".getBytes());
+
+        assertThat(provider.validateToken(parts[0] + "." + forgedPayload + "." + parts[2])).isFalse();
     }
 
     @Test

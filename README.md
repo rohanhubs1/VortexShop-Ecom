@@ -45,7 +45,7 @@ A modern full-stack e-commerce platform built with Spring Boot, React, MySQL, JW
 
 ### Backend
 
-* Java 17
+* Java 21
 * Spring Boot 3
 * Spring Security
 * JWT Authentication
@@ -121,7 +121,7 @@ MAIL_PASSWORD
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Backend runs on:
@@ -162,7 +162,7 @@ No manual SQL import is required.
 
 ## Testing
 
-The backend has 182 automated tests written with JUnit 5, Mockito, Spring MockMvc and an in-memory H2 database. They do not need MySQL, a JWT secret or mail credentials.
+The backend has 183 automated tests written with JUnit 5, Mockito, Spring MockMvc and an in-memory H2 database. They do not need MySQL, a JWT secret or mail credentials.
 
 ```bash
 cd backend
